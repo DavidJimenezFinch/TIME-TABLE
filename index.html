@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PROYECTO TIME TABLE</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c10;--surface:#111318;--surface2:#181c24;--surface3:#1e2330;--border:#2a3040;--accent:#4f8ef7;--accent2:#7c5cfc;--green:#22c55e;--yellow:#f59e0b;--red:#ef4444;--orange:#f97316;--text:#e8ecf4;--muted:#6b7a99;--tag:#253040;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.header{background:linear-gradient(135deg,#0d1220,#111827);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;}
+.logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;letter-spacing:2px;color:var(--accent);display:flex;align-items:center;gap:10px;}
+.logo span{color:var(--text);}
+.header-right{display:flex;align-items:center;gap:14px;}
+.badge-notif{background:var(--red);color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:2px 8px;cursor:pointer;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.tabs{display:flex;gap:2px;padding:0 28px;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;}
+.tab{padding:14px 18px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:.2s;font-family:'Syne',sans-serif;letter-spacing:.5px;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.main{padding:24px 28px;max-width:1700px;}
+.page{display:none;}.page.active{display:block;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
+.card-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin-bottom:20px;}
+.stat{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
+.stat::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--al,var(--accent));}
+.stat-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:var(--accent);}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:3px;}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;}
+.kpi{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px;}
+.kpi-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.kpi-data .val{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;}
+.kpi-data .lbl{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.4px;}
+.kpi-data .sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+th{background:var(--surface3);color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;padding:9px 11px;text-align:left;border-bottom:1px solid var(--border);}
+td{padding:9px 11px;border-bottom:1px solid #1a2030;vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#ffffff04;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;font-size:10px;font-weight:600;}
+.badge.green{background:#14532d33;color:var(--green);border:1px solid #166534;}
+.badge.red{background:#7f1d1d33;color:var(--red);border:1px solid #991b1b;}
+.badge.yellow{background:#78350f33;color:var(--yellow);border:1px solid #92400e;}
+.badge.blue{background:#1e3a5f33;color:var(--accent);border:1px solid #1d4ed8;}
+.badge.purple{background:#3b1f6033;color:#a78bfa;border:1px solid #6d28d9;}
+.badge.orange{background:#7c2d1233;color:var(--orange);border:1px solid #c2410c;}
+.badge.gray{background:var(--tag);color:var(--muted);border:1px solid var(--border);}
+.badge.teal{background:#0d3d3533;color:#2dd4bf;border:1px solid #0f766e;}
+.semaforo{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.luz{width:18px;height:18px;border-radius:50%;border:2px solid #2a3040;transition:.3s;}
+.luz.on-red{background:var(--red);box-shadow:0 0 8px var(--red);}
+.luz.on-yellow{background:var(--yellow);box-shadow:0 0 8px var(--yellow);}
+.luz.on-green{background:var(--green);box-shadow:0 0 8px var(--green);}
+.luz.off{background:#1e2330;}
+.hour-bar{background:var(--surface3);border-radius:999px;height:7px;overflow:hidden;width:90px;}
+.hour-fill{height:100%;border-radius:999px;transition:.4s;}
+.cf-bar{background:var(--surface3);border-radius:4px;height:14px;overflow:hidden;width:100%;position:relative;}
+.cf-fill{height:100%;border-radius:4px;transition:.4s;display:flex;align-items:center;justify-content:flex-end;padding-right:4px;min-width:28px;}
+.cf-label{font-size:9px;font-weight:700;color:#fff;font-family:'DM Mono',monospace;}
+.util-ring{position:relative;flex-shrink:0;}
+.util-ring svg{transform:rotate(-90deg);display:block;}
+.util-ring-val{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-weight:700;font-family:'DM Mono',monospace;}
+#alert-panel{position:fixed;top:72px;right:20px;width:340px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.alert-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12px;box-shadow:0 4px 24px #0008;animation:slideIn .3s ease;pointer-events:all;}
+.alert-item.new-course{border-left:4px solid var(--green);}
+.alert-item.warning{border-left:4px solid var(--yellow);}
+.alert-item.info{border-left:4px solid var(--accent);}
+.alert-item.error{border-left:4px solid var(--red);background:#1a0a0a;}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}
+.alert-title{font-weight:700;font-family:'Syne',sans-serif;font-size:12px;margin-bottom:3px;}
+.alert-close{float:right;cursor:pointer;color:var(--muted);margin-left:8px;}
+.schedule-grid{display:grid;grid-template-columns:65px repeat(5,1fr);gap:2px;font-size:11px;}
+.sg-header{background:var(--surface3);padding:7px;text-align:center;font-weight:700;color:var(--muted);border-radius:4px;font-family:'Syne',sans-serif;font-size:10px;}
+.sg-time{background:var(--surface2);padding:5px 3px;text-align:right;color:var(--muted);font-family:'DM Mono',monospace;font-size:10px;border-radius:4px;display:flex;align-items:center;justify-content:flex-end;}
+.sg-slot{background:var(--surface2);border-radius:4px;padding:3px;min-height:38px;border:1px solid var(--border);overflow:hidden;transition:.2s;}
+.sg-slot:hover{border-color:var(--accent);}
+.sg-class{background:linear-gradient(135deg,#1e3a5f,#0f2040);border-radius:3px;padding:3px 4px;margin-bottom:2px;font-size:9px;color:#93c5fd;border-left:2px solid var(--accent);}
+.sg-class.cancelled{background:#2d1515;color:#f87171;border-left-color:var(--red);text-decoration:line-through;opacity:.6;}
+.sg-class.pending{background:#0f2d1f;color:#6ee7b7;border-left-color:var(--green);}
+.btn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;letter-spacing:.4px;transition:.2s;}
+.btn-primary{background:var(--accent);color:#fff;}.btn-primary:hover{background:#3b7de8;}
+.btn-success{background:var(--green);color:#fff;}.btn-success:hover{background:#16a34a;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-warning{background:var(--yellow);color:#000;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:3px 9px;font-size:10px;}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.filter-input{background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:7px 11px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
+.filter-input:focus{border-color:var(--accent);}
+select.filter-input option{background:var(--surface2);}
+.pref-tags{display:flex;flex-wrap:wrap;gap:3px;}
+.pref-tag{background:var(--tag);color:var(--muted);border-radius:4px;padding:2px 6px;font-size:9px;}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.tag-type{background:var(--surface3);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.modal-overlay{display:none;position:fixed;inset:0;background:#0009;z-index:300;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px;width:620px;max-width:96vw;max-height:92vh;overflow-y:auto;}
+.modal-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;margin-bottom:18px;}
+.form-row{margin-bottom:12px;}
+.form-row label{display:block;font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;}
+.form-row input,.form-row select,.form-row textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--accent);}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+/* conflict box */
+.conflict-box{background:#2d0f0f;border:1px solid var(--red);border-radius:8px;padding:12px;margin-bottom:12px;font-size:12px;color:#fca5a5;display:none;}
+.conflict-box.show{display:block;}
+/* rec cards */
+.rec-card{border-radius:10px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:.2s;border:2px solid transparent;}
+.rec-card:hover{border-color:var(--accent);transform:translateX(2px);}
+.rec-card.best{background:#0f2d1f;border-color:var(--green);}
+.rec-card.good{background:#1a2440;}
+.rec-card.low{background:var(--surface2);opacity:.75;}
+.rec-card.conflict{background:#2d0f0f;border-color:var(--red);opacity:.6;cursor:not-allowed;}
+.rec-id{font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--accent);}
+.rec-reason{font-size:11px;color:var(--muted);margin-top:3px;}
+/* teacher search dropdown */
+.teacher-search-wrap{position:relative;margin-bottom:12px;}
+.teacher-search-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:7px;padding:8px 11px;color:var(--text);font-size:12px;outline:none;font-family:'Inter',sans-serif;}
+.teacher-search-input:focus{border-color:var(--accent);}
+.teacher-dropdown{position:absolute;top:100%;left:0;right:0;background:var(--surface2);border:1px solid var(--accent);border-radius:7px;max-height:220px;overflow-y:auto;z-index:50;display:none;}
+.teacher-dropdown.open{display:block;}
+.teacher-opt{padding:9px 12px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;transition:.15s;}
+.teacher-opt:hover{background:var(--surface3);}
+.teacher-opt.conflict-opt{opacity:.5;cursor:not-allowed;background:#1a0a0a;}
+.teacher-opt .t-util{font-family:'DM Mono',monospace;font-size:11px;padding:2px 7px;border-radius:4px;}
+/* room browser */
+.room-browser{margin-bottom:14px;}
+.room-browser-header{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;}
+.sede-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);cursor:pointer;font-size:11px;font-weight:600;transition:.2s;font-family:'Syne',sans-serif;}
+.sede-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.room-hour-grid{display:grid;grid-template-columns:70px repeat(auto-fill,minmax(70px,1fr));gap:2px;font-size:10px;}
+.rh-head{background:var(--surface3);padding:5px;text-align:center;font-weight:700;color:var(--muted);border-radius:3px;font-family:'DM Mono',monospace;}
+.rh-time{background:var(--surface3);padding:5px;color:var(--muted);border-radius:3px;font-family:'DM Mono',monospace;font-size:9px;display:flex;align-items:center;}
+.rh-cell{padding:4px;border-radius:3px;text-align:center;font-size:9px;cursor:pointer;transition:.15s;}
+.rh-cell.free{background:#0f2d1f;color:#6ee7b7;border:1px solid #166534;}
+.rh-cell.free:hover{background:#166534;color:#fff;}
+.rh-cell.busy{background:#2d1515;color:#f87171;border:1px solid #991b1b;cursor:default;}
+/* rooms page */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;}
+.room-card{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center;transition:.2s;cursor:pointer;}
+.room-card:hover{border-color:var(--accent);}
+.room-card.occupied{border-color:var(--red);background:#2d151520;}
+.room-card.available{border-color:var(--green);}
+.room-name{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;}
+.room-sede{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:2px;}
+.room-class{font-size:9px;color:var(--muted);margin-top:4px;}
+.occ-bar{background:var(--surface3);border-radius:4px;height:10px;overflow:hidden;margin-top:4px;}
+.occ-fill{height:100%;border-radius:4px;transition:.5s;}
+/* teacher detail panel */
+.teacher-detail-panel{background:var(--surface2);border:1px solid var(--accent);border-radius:10px;padding:16px;margin-top:10px;display:none;}
+.teacher-detail-panel.open{display:block;}
+/* inline controls */
+.edit-students{display:flex;align-items:center;gap:6px;}
+.edit-students button{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--surface3);color:var(--text);cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.edit-students button:hover{border-color:var(--accent);color:var(--accent);}
+.edit-students .count{font-family:'DM Mono',monospace;font-weight:700;min-width:24px;text-align:center;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px;}
+@media(max-width:900px){.two-col,.three-col{grid-template-columns:1fr;}.form-grid{grid-template-columns:1fr;}}
+.divider{border:none;border-top:1px solid var(--border);margin:14px 0;}
+.float-add{position:fixed;bottom:24px;right:24px;width:50px;height:50px;border-radius:50%;background:var(--accent);border:none;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 4px 20px #4f8ef755;z-index:150;transition:.2s;}
+.float-add:hover{transform:scale(1.1);}
+@keyframes flash{0%{background:#4f8ef730}50%{background:#4f8ef760}100%{background:transparent}}
+.flash{animation:flash .5s ease;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">⟨TT⟩ <span>PROYECTO TIME TABLE</span></div>
+  <div class="header-right">
+    <span class="badge-notif" onclick="toggleAlerts()" id="notif-btn">🔔 0</span>
+    <span style="color:var(--muted);font-size:11px;font-family:'DM Mono',monospace" id="clock"></span>
+  </div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showPage('dashboard')">📊 Dashboard</div>
+  <div class="tab" onclick="showPage('teachers')">👨‍🏫 Docentes</div>
+  <div class="tab" onclick="showPage('schedule')">🗓️ Horario</div>
+  <div class="tab" onclick="showPage('classes')">📚 Clases</div>
+  <div class="tab" onclick="showPage('rooms')">🏫 Salones</div>
+  <div class="tab" onclick="showPage('commercial')">📈 Comercial</div>
+  <div class="tab" onclick="showPage('coverage')">🔄 Cobertura</div>
+</div>
+<div id="alert-panel"></div>
+<div class="main">
+  <div class="page active" id="page-dashboard"></div>
+  <div class="page" id="page-teachers"></div>
+  <div class="page" id="page-schedule"></div>
+  <div class="page" id="page-classes"></div>
+  <div class="page" id="page-rooms"></div>
+  <div class="page" id="page-commercial"></div>
+  <div class="page" id="page-coverage"></div>
+</div>
+
+<!-- MODAL: NUEVA / EDITAR CLASE -->
+<div class="modal-overlay" id="modal-add-class">
+  <div class="modal">
+    <div class="modal-title" id="modal-class-title">📚 Nueva Clase</div>
+    <div class="conflict-box" id="class-conflict-box"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Curso</label>
+        <select class="filter-input" style="width:100%" id="nc-course">
+          <option>ADVANCED</option><option>BEGINNER A</option><option>BOOSTER CLASS – Pre Intermediate (MX)</option>
+          <option>BOOSTER CLASS – Upper Intermediate (MX)</option><option>BUSINESS INTERMEDIATE</option>
+          <option>EARLY YEARS 2</option><option>EARLY YEARS 3</option><option>ELEMENTARY B</option>
+          <option>INTERMEDIATE</option><option>PRE INTERMEDIATE</option><option>UPPER INTERMEDIATE</option>
+          <option>SPEAKING INTERMEDIATE</option><option>SPEAKING UPPER INTERMEDIATE</option>
+          <option>PRIMARY P 6</option><option>MyClub</option><option>YL Tutorials</option>
+          <option>Lief Play</option><option>Marking Shift</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Días</label>
+        <select class="filter-input" style="width:100%" id="nc-days" onchange="refreshConflicts()">
+          <option value="L/M">Lunes y Miércoles</option><option value="Mar/Jue">Martes y Jueves</option>
+          <option value="Mar/Vie">Martes y Viernes</option><option value="L/M/V">L, M y V</option>
+          <option value="Sáb">Sábado</option><option value="Mar">Martes</option>
+          <option value="Mié">Miércoles</option><option value="Jue">Jueves</option><option value="Vie">Viernes</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Horario</label>
+        <select class="filter-input" style="width:100%" id="nc-time" onchange="refreshConflicts()">
+          <option value="7–8am">7:00–8:00</option><option value="8–9am">8:00–9:00</option>
+          <option value="9–10am">9:00–10:00</option><option value="10–11am">10:00–11:00</option>
+          <option value="11–12pm">11:00–12:00</option><option value="12–1pm">12:00–13:00</option>
+          <option value="1–2pm">13:00–14:00</option><option value="2–3pm">14:00–15:00</option>
+          <option value="3–4pm">15:00–16:00</option><option value="4–5pm">16:00–17:00</option>
+          <option value="5–6pm">17:00–18:00</option><option value="6–7pm">18:00–19:00</option>
+        </select>
+      </div>
+      <div class="form-row"><label>Salón — <span style="color:var(--accent);cursor:pointer" onclick="openRoomBrowser('nc-room',document.getElementById('nc-days').value,document.getElementById('nc-time').value)">ver disponibilidad ↗</span></label>
+        <select class="filter-input" style="width:100%" id="nc-room" onchange="checkRoomConflict()"></select>
+      </div>
+      <div class="form-row"><label>Nro. Estudiantes</label>
+        <input type="number" class="filter-input" style="width:100%" id="nc-students" value="0" min="0" max="15">
+      </div>
+      <div class="form-row"><label>Cover</label><select class="filter-input" style="width:100%" id="nc-cover"></select></div>
+      <div class="form-row" style="grid-column:1/-1"><label>DM</label><select class="filter-input" style="width:100%" id="nc-dm"></select></div>
+    </div>
+    <div class="divider"></div>
+    <!-- TEACHER ASSIGN SECTION -->
+    <div style="font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+      <div class="dot" style="background:var(--green)"></div>Asignación de Docente
+    </div>
+    <!-- Manual search -->
+    <div class="form-row">
+      <label>Búsqueda manual de docente</label>
+      <div class="teacher-search-wrap">
+        <input class="teacher-search-input" id="teacher-manual-search" placeholder="Escribe ID o nombre (ej: FT5)..." autocomplete="off"
+          oninput="filterTeacherDropdown()" onfocus="openTeacherDropdown()" onblur="setTimeout(()=>closeTeacherDropdown(),200)">
+        <div class="teacher-dropdown" id="teacher-dropdown"></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-bottom:12px" onclick="smartRecommend('smart-recommendations','selectNewClassTeacher')">✨ Ver recomendaciones inteligentes</button>
+    <div id="smart-recommendations"></div>
+    <input type="hidden" id="nc-teacher-selected" value="">
+    <input type="hidden" id="nc-edit-id" value="">
+    <div id="nc-teacher-display" style="display:none;background:var(--surface2);border:1px solid var(--green);border-radius:8px;padding:10px;margin-top:8px;font-size:12px">
+      ✅ Docente: <strong id="nc-teacher-name" style="font-family:'DM Mono',monospace;color:var(--green)"></strong>
+      <button class="btn btn-ghost btn-sm" style="margin-left:8px" onclick="clearTeacher()">Cambiar</button>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-class')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNewClass()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ASIGNAR DOCENTE (desde tabla) -->
+<div class="modal-overlay" id="modal-assign-teacher">
+  <div class="modal">
+    <div class="modal-title" id="assign-modal-title">Asignar Docente</div>
+    <div id="assign-class-info" style="background:var(--surface2);border-radius:8px;padding:12px;margin-bottom:14px;font-size:12px;color:var(--muted)"></div>
+    <div class="conflict-box" id="assign-conflict-box"></div>
+    <!-- Manual search in assign modal -->
+    <div class="form-row">
+      <label>Búsqueda manual</label>
+      <div class="teacher-search-wrap">
+        <input class="teacher-search-input" id="assign-manual-search" placeholder="Escribe ID del docente..." autocomplete="off"
+          oninput="filterAssignDropdown()" onfocus="openAssignDropdown()" onblur="setTimeout(()=>closeAssignDropdown(),200)">
+        <div class="teacher-dropdown" id="assign-dropdown"></div>
+      </div>
+    </div>
+    <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">⭐ Recomendaciones automáticas</div>
+    <div id="assign-recommendations"></div>
+    <input type="hidden" id="assign-class-id" value="">
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal('modal-assign-teacher')">Cancelar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: NUEVO DOCENTE -->
+<div class="modal-overlay" id="modal-add-teacher">
+  <div class="modal">
+    <div class="modal-title">➕ Nuevo Docente</div>
+    <div class="form-row"><label>Tipo</label>
+      <select class="filter-input" style="width:100%" id="new-type" onchange="updateNewCode()">
+        <option>Senior</option><option>Coordinador</option><option>Full Time</option><option>Hourly Paid</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Código asignado (auto)</label>
+      <input id="new-code" readonly style="background:var(--surface3);font-family:'DM Mono',monospace;font-weight:700;font-size:16px">
+    </div>
+    <div class="form-row"><label>Preferencias horarias</label>
+      <textarea rows="2" id="new-pref" placeholder="Ej: Solo mañanas L y Mié." class="filter-input" style="width:100%"></textarea>
+    </div>
+    <div class="form-row"><label>Tipos de clase</label>
+      <select class="filter-input" style="width:100%;height:76px" multiple id="new-types">
+        <option>Adultos</option><option>Niños (Early Years)</option><option>Corporativo</option><option>Primary</option>
+      </select>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-teacher')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNewTeacher()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: DISPONIBILIDAD DE SALÓN -->
+<div class="modal-overlay" id="modal-room-browser">
+  <div class="modal" style="width:900px;max-width:98vw">
+    <div class="modal-title">🏫 Disponibilidad de Salones</div>
+    <div class="room-browser-header" id="rb-sede-btns"></div>
+    <div id="rb-grid-wrap" style="overflow-x:auto"></div>
+    <input type="hidden" id="rb-target-select">
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal('modal-room-browser')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: DETALLE DOCENTE -->
+<div class="modal-overlay" id="modal-teacher-detail">
+  <div class="modal">
+    <div class="modal-title" id="td-title">Detalle Docente</div>
+    <div id="td-body"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="closeModal('modal-teacher-detail')">Cerrar</button></div>
+  </div>
+</div>
+
+<!-- MODAL: SOLICITUD COMERCIAL -->
+<div class="modal-overlay" id="modal-new-course">
+  <div class="modal">
+    <div class="modal-title">📈 Nueva Solicitud</div>
+    <div class="form-row"><label>Curso</label>
+      <select class="filter-input" style="width:100%" id="com-course">
+        <option>BEGINNER A</option><option>PRE INTERMEDIATE</option><option>INTERMEDIATE</option>
+        <option>UPPER INTERMEDIATE</option><option>ADVANCED</option><option>EARLY YEARS 2</option><option>ELEMENTARY B</option>
+      </select>
+    </div>
+    <div class="form-grid">
+      <div class="form-row"><label>Días</label><input class="filter-input" style="width:100%" id="com-days" placeholder="Ej: Sábados"></div>
+      <div class="form-row"><label>Horario</label><input class="filter-input" style="width:100%" id="com-time" placeholder="Ej: 9–10am"></div>
+      <div class="form-row"><label>Inscritos</label><input type="number" class="filter-input" style="width:100%" id="com-total" value="0" min="0"></div>
+      <div class="form-row"><label>Ya pagaron</label><input type="number" class="filter-input" style="width:100%" id="com-paid" value="0" min="0"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-new-course')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveNewCourse()">Registrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDITAR COMERCIAL -->
+<div class="modal-overlay" id="modal-edit-commercial">
+  <div class="modal" style="width:400px">
+    <div class="modal-title" id="edit-com-title">Editar Inscripciones</div>
+    <div class="form-row"><label>Inscritos totales</label><input type="number" class="filter-input" style="width:100%" id="edit-com-total" min="0"></div>
+    <div class="form-row"><label>Ya pagaron</label><input type="number" class="filter-input" style="width:100%" id="edit-com-paid" min="0"></div>
+    <input type="hidden" id="edit-com-idx">
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-commercial')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveEditCommercial()">💾 Actualizar</button>
+    </div>
+  </div>
+</div>
+
+<button class="float-add" title="Nueva Clase" onclick="showPage('classes');openNewClassModal()">+</button>
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONSTANTS & INITIAL DATA
+// ══════════════════════════════════════════════════════════════════
+const ROOMS_DATA={
+  '93':['S193','S293','S393','S493','S593','S693','S793','S893','S993','S1093'],
+  'sl':['SL1','SL2','SL3','SL4','SL5','SL6','SL7','SL8'],
+  'rt':['RT1','RT2','RT3']
+};
+const ALL_ROOMS=[...ROOMS_DATA['93'],...ROOMS_DATA['sl'],...ROOMS_DATA['rt']];
+const SEDE_LABEL={'93':'Sede 93','sl':'Salitre','rt':'Rentar'};
+const ALL_HOURS=['7–8am','8–9am','9–10am','10–11am','11–12pm','12–1pm','1–2pm','2–3pm','3–4pm','4–5pm','5–6pm','6–7pm'];
+
+// Day overlaps: which days share actual calendar days
+function daysOverlap(d1,d2){
+  const expand=d=>{
+    const m={L:['L'],M:['M'],Mié:['Mié'],Jue:['Jue'],Vie:['Vie'],Sáb:['Sáb'],Mar:['Mar']};
+    if(d==='L/M') return ['L','Mié'];
+    if(d==='Mar/Jue') return ['Mar','Jue'];
+    if(d==='Mar/Vie') return ['Mar','Vie'];
+    if(d==='L/M/V') return ['L','Mié','Vie'];
+    return [d];
+  };
+  const s1=new Set(expand(d1)), s2=new Set(expand(d2));
+  return [...s1].some(d=>s2.has(d));
+}
+
+// Check if two time slots overlap (same hour block)
+function timesOverlap(t1,t2){return t1===t2;}
+
+// Does teacherId have a conflict at given days+time (excluding classIdToIgnore)?
+function teacherHasConflict(teacherId,days,time,ignoreClassId=''){
+  return STATE.classes.some(c=>
+    c.id!==ignoreClassId &&
+    c.teacher===teacherId &&
+    c.status==='active' &&
+    daysOverlap(c.days,days) &&
+    timesOverlap(c.time,time)
+  );
+}
+
+// Does room have a conflict at given days+time?
+function roomHasConflict(room,days,time,ignoreClassId=''){
+  if(!room) return false;
+  return STATE.classes.some(c=>
+    c.id!==ignoreClassId &&
+    c.room===room &&
+    c.status==='active' &&
+    daysOverlap(c.days,days) &&
+    timesOverlap(c.time,time)
+  );
+}
+
+const HPT_PREFS={
+  HPT1:{prefs:['Mar/Jue mañana','Vie tarde'],types:['Adultos'],note:'Mar/Jue AM · Vie PM'},
+  HPT2:{prefs:['Lun–Vie mañana'],types:['Adultos','Corporativo'],note:'Toda la mañana L–V'},
+  HPT3:{prefs:['Sáb todo el día'],types:['Adultos','Niños'],note:'Solo sábados'},
+  HPT4:{prefs:['Mié/Jue mañana','Vie tarde'],types:['Adultos'],note:'Mié/Jue AM · Vie PM'},
+  HPT5:{prefs:['Tarde L–V'],types:['Adultos'],note:'Solo tardes L–V'},
+  HPT6:{prefs:['Mié–Vie flexible'],types:['Corporativo','Adultos'],note:'Mié–Vie flexible'},
+  HPT7:{prefs:['L/M/Mié mañana'],types:['Niños (Early Years)','YL'],note:'Solo niños · L–Mié AM'},
+  HPT8:{prefs:['Mar/Jue tarde','Sáb'],types:['Adultos'],note:'Mar/Jue PM + Sáb'},
+  HPT9:{prefs:['Lun–Mié mañana'],types:['Adultos'],note:'Mañanas L–Mié'},
+  HPT10:{prefs:['Flexible L–V'],types:['Adultos','Corporativo'],note:'Muy flexible L–V'},
+  HPT11:{prefs:['Sáb y Dom'],types:['Adultos'],note:'Fin de semana'},
+  HPT12:{prefs:['Mié–Sáb'],types:['Niños (Early Years)','Primary'],note:'Solo niños · Mié–Sáb'},
+  HPT13:{prefs:['Jue/Vie tarde'],types:['Adultos'],note:'Jue/Vie tardes'},
+  HPT14:{prefs:['L/M mañana','Jue tarde'],types:['Corporativo'],note:'Corp · L/M AM · Jue PM'},
+  HPT15:{prefs:['Mar–Jue todo el día'],types:['Adultos','Speaking'],note:'Mar–Jue completo'},
+};
+
+function buildTeachers(){
+  const t=[];
+  ['SR1','SR2'].forEach(id=>t.push({id,type:'Senior',minH:5,maxH:10,prefs:['Flexible L–V'],types:['Adultos'],note:''}));
+  ['COO1','COO2','COO3'].forEach(id=>t.push({id,type:'Coordinador',minH:15,maxH:25,prefs:['Flexible'],types:['Adultos','Corporativo'],note:''}));
+  for(let i=1;i<=18;i++){const id=`FT${i}`;t.push({id,type:'Full Time',minH:25,maxH:35,prefs:['L–V flexible'],types:['Adultos'],note:''});}
+  for(let i=1;i<=15;i++){const id=`HPT${i}`;const p=HPT_PREFS[id];t.push({id,type:'Hourly Paid',minH:12,maxH:20,prefs:p.prefs,types:p.types,note:p.note});}
+  return t;
+}
+
+const STATE={
+  teachers:buildTeachers(),
+  classes:[
+    {id:'c1', name:'ADVANCED',                    days:'L/M',    time:'5–6pm',   room:'S193',teacher:'FT11',cover:'FT3',  dm:'COO1',status:'cancelled',students:2,  maxStudents:10},
+    {id:'c2', name:'BOOSTER CLASS Pre-Int (MX)',   days:'L/M',    time:'5–6pm',   room:'SL1', teacher:'FT6', cover:'FT7',  dm:'COO2',status:'active',   students:8,  maxStudents:10},
+    {id:'c3', name:'UPPER INTERMEDIATE',           days:'Mar/Jue',time:'6–7pm',   room:'S293',teacher:'FT5', cover:'FT12', dm:'COO1',status:'active',   students:10, maxStudents:10},
+    {id:'c4', name:'INTERMEDIATE',                 days:'L/M',    time:'7–8am',   room:'S393',teacher:'FT2', cover:'SR1',  dm:'COO3',status:'active',   students:9,  maxStudents:10},
+    {id:'c5', name:'PRE INTERMEDIATE',             days:'Mar/Jue',time:'8–9am',   room:'S493',teacher:'HPT9',cover:'FT4',  dm:'COO2',status:'active',   students:7,  maxStudents:10},
+    {id:'c6', name:'EARLY YEARS 2',                days:'L/M',    time:'9–10am',  room:'SL2', teacher:'HPT7',cover:'HPT12',dm:'SR2', status:'active',   students:6,  maxStudents:10},
+    {id:'c7', name:'EARLY YEARS 3',                days:'Mar/Jue',time:'9–10am',  room:'SL3', teacher:'HPT12',cover:'HPT7',dm:'SR2', status:'active',   students:5,  maxStudents:10},
+    {id:'c8', name:'BUSINESS INTERMEDIATE',        days:'Mié',    time:'7–8am',   room:'RT1', teacher:'HPT14',cover:'FT10',dm:'COO1',status:'active',   students:4,  maxStudents:10},
+    {id:'c9', name:'BEGINNER A',                   days:'Sáb',    time:'9–10am',  room:'SL6', teacher:'',    cover:'FT6',  dm:'COO3',status:'pending',  students:6,  maxStudents:10},
+    {id:'c10',name:'SPEAKING UPPER INT.',          days:'Vie',    time:'6–7pm',   room:'S593',teacher:'FT8', cover:'SR1',  dm:'COO2',status:'active',   students:8,  maxStudents:10},
+    {id:'c11',name:'ELEMENTARY B',                 days:'Mar/Vie',time:'10–11am', room:'S693',teacher:'FT15',cover:'HPT2', dm:'COO3',status:'active',   students:7,  maxStudents:10},
+    {id:'c12',name:'PRIMARY P 6',                  days:'Sáb',    time:'10–11am', room:'SL4', teacher:'HPT12',cover:'HPT7',dm:'SR2', status:'active',   students:6,  maxStudents:10},
+    {id:'c13',name:'MyClub',                       days:'Mié',    time:'4–5pm',   room:'S793',teacher:'FT16',cover:'FT9',  dm:'COO1',status:'active',   students:12, maxStudents:15},
+    {id:'c14',name:'YL Tutorials',                 days:'Sáb',    time:'11–12pm', room:'SL5', teacher:'HPT3',cover:'HPT8', dm:'SR1', status:'active',   students:5,  maxStudents:10},
+  ],
+  commercial:[
+    {course:'BEGINNER A',        days:'Sábado',time:'9–10am', total:6,paid:6,pending:0},
+    {course:'ADVANCED',          days:'L/M',   time:'7–8am',  total:3,paid:1,pending:2},
+    {course:'PRE INTERMEDIATE',  days:'Mar/Jue',time:'6–7pm', total:7,paid:4,pending:3},
+    {course:'UPPER INTERMEDIATE',days:'L/Mié', time:'7–8pm',  total:0,paid:0,pending:0},
+    {course:'EARLY YEARS 2',     days:'Sáb',   time:'10–11am',total:4,paid:0,pending:4},
+    {course:'INTERMEDIATE',      days:'Vie',   time:'5–6pm',  total:5,paid:5,pending:0},
+  ],
+  currentPage:'dashboard',
+  teacherFilter:'',
+  teacherTypeFilter:'',
+};
+
+// ══════════════════════════════════════════════════════════════════
+// COMPUTED HOURS — real hours from active classes
+// ══════════════════════════════════════════════════════════════════
+function computeHours(){
+  const h={};
+  STATE.teachers.forEach(t=>h[t.id]=0);
+  STATE.classes.forEach(c=>{
+    if(c.status!=='active'||!c.teacher) return;
+    const days=c.days;
+    let n=1;
+    if(days==='L/M'||days==='Mar/Jue'||days==='Mar/Vie') n=2;
+    else if(days==='L/M/V') n=3;
+    if(h[c.teacher]!==undefined) h[c.teacher]+=n;
+  });
+  return h;
+}
+function recalcHours(){const h=computeHours();STATE.teachers.forEach(t=>t.assignedH=h[t.id]||0);}
+function getUtil(t){return Math.min(100,Math.round(t.assignedH/t.maxH*100));}
+
+// ══════════════════════════════════════════════════════════════════
+// MASTER RENDER
+// ══════════════════════════════════════════════════════════════════
+function renderAll(){
+  recalcHours();
+  renderDashboard();
+  const p=STATE.currentPage;
+  if(p==='teachers')  renderTeachersPage();
+  if(p==='schedule')  renderSchedulePage();
+  if(p==='classes')   renderClassesPage();
+  if(p==='rooms')     renderRoomsPage();
+  if(p==='commercial')renderCommercialPage();
+  if(p==='coverage')  renderCoveragePage();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════
+function cfColor(p){return p>=80?'var(--green)':p>=50?'var(--yellow)':'var(--red)';}
+function utilColor(p){return p>=80?'var(--green)':p>=60?'var(--yellow)':'var(--red)';}
+function typeBadge(t){return{Senior:'<span class="badge blue">SR</span>',Coordinador:'<span class="badge purple">COO</span>','Full Time':'<span class="badge blue">FT</span>','Hourly Paid':'<span class="badge orange">HPT</span>'}[t]||'';}
+function stBadge(s){return{active:'<span class="badge green">Activa</span>',cancelled:'<span class="badge red">Cancelada</span>',pending:'<span class="badge yellow">Pendiente</span>',open:'<span class="badge blue">Sin docente</span>'}[s]||'';}
+function isKids(n){return /YEARS|Primary|PRIMARY|YL|Lief/i.test(n);}
+function isCorp(n){return /BUSINESS|Corporate/i.test(n);}
+function sedeName(room){if(!room)return '';if(room.startsWith('SL'))return 'Salitre';if(room.startsWith('RT'))return 'Rentar';return 'Sede 93';}
+
+function ring(pct,color,size=44){
+  const r=size/2-4,c=2*Math.PI*r,f=c*(1-pct/100);
+  return `<div class="util-ring" style="width:${size}px;height:${size}px"><svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#1e2330" stroke-width="3.5"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${color}" stroke-width="3.5" stroke-dasharray="${c.toFixed(1)}" stroke-dashoffset="${f.toFixed(1)}" stroke-linecap="round"/></svg><div class="util-ring-val" style="color:${color};font-size:${size<40?9:10}px">${pct}%</div></div>`;
+}
+function cfBar(s,m){const p=Math.round(s/m*100);const c=cfColor(p);return `<div class="cf-bar"><div class="cf-fill" style="width:${p}%;background:${c}"><span class="cf-label">${p}%</span></div></div>`;}
+function semaforo(t,p){const s=t===0?'red':p>=5?'green':'yellow';return `<div class="semaforo"><div class="luz ${s==='red'?'on-red':'off'}"></div><div class="luz ${s==='yellow'?'on-yellow':'off'}"></div><div class="luz ${s==='green'?'on-green':'off'}"></div></div>`;}
+
+function calcKPIs(){
+  const active=STATE.classes.filter(c=>c.status==='active');
+  const ts=active.reduce((a,c)=>a+c.students,0);
+  const avg=active.length?+(ts/active.length).toFixed(1):0;
+  const au=STATE.teachers.length?Math.round(STATE.teachers.reduce((a,t)=>a+getUtil(t),0)/STATE.teachers.length):0;
+  const occ=ALL_ROOMS.filter(r=>STATE.classes.find(c=>c.room===r&&c.status==='active')).length;
+  const rp=Math.round(occ/ALL_ROOMS.length*100);
+  const cf=active.length?Math.round(active.reduce((a,c)=>a+(c.students/c.maxStudents*100),0)/active.length):0;
+  return{avg,ts,cnt:active.length,au,occ,rp,cf};
+}
+
+// Teacher classes list
+function teacherClasses(id){return STATE.classes.filter(c=>c.teacher===id&&c.status==='active');}
+
+// ══════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const K=calcKPIs();
+  const active=STATE.classes.filter(c=>c.status==='active');
+  const cancelled=STATE.classes.filter(c=>c.status==='cancelled');
+  const pending=STATE.classes.filter(c=>c.status==='pending');
+
+  const cfBars=active.slice(0,9).map(c=>{const p=Math.round(c.students/c.maxStudents*100);const col=cfColor(p);
+    return `<div style="margin-bottom:9px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px"><span style="color:var(--muted)">${c.name.substring(0,26)}</span><span style="font-family:'DM Mono',monospace;color:${col}">${c.students}/${c.maxStudents}</span></div>${cfBar(c.students,c.maxStudents)}</div>`;}).join('');
+
+  const groups=[{l:'Senior',ts:STATE.teachers.filter(t=>t.type==='Senior')},{l:'Coordinador',ts:STATE.teachers.filter(t=>t.type==='Coordinador')},{l:'Full Time',ts:STATE.teachers.filter(t=>t.type==='Full Time')},{l:'HPT',ts:STATE.teachers.filter(t=>t.type==='Hourly Paid')}];
+  const utilBars=groups.map(g=>{const avg=g.ts.length?Math.round(g.ts.reduce((a,t)=>a+getUtil(t),0)/g.ts.length):0;const col=utilColor(avg);
+    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px"><span style="color:var(--muted)">${g.l} (${g.ts.length})</span><span style="font-family:'DM Mono',monospace;color:${col}">${avg}%</span></div><div class="hour-bar" style="width:100%;height:10px"><div class="hour-fill" style="width:${avg}%;background:${col}"></div></div></div>`;}).join('');
+
+  const urgent=STATE.classes.filter(c=>c.status==='cancelled'&&c.teacher).map(c=>
+    `<div style="background:var(--surface2);border-radius:9px;padding:12px;border:1px solid #7f1d1d66;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><div><div style="color:var(--red);font-weight:700;font-family:'Syne',sans-serif;font-size:13px">🔴 ${c.name} · ${c.days} ${c.time}</div><div style="font-size:11px;color:var(--muted);margin-top:3px">${c.teacher} liberado · ${c.room||'sin salón'}</div></div><button class="btn btn-warning btn-sm" onclick="openAssignModal('${c.id}')">Reasignar</button></div>`).join('');
+
+  document.getElementById('page-dashboard').innerHTML=`
+    <div class="stats">
+      <div class="stat" style="--al:var(--accent)"><div class="stat-val">${STATE.teachers.length}</div><div class="stat-lbl">Docentes</div></div>
+      <div class="stat" style="--al:var(--green)"><div class="stat-val" style="color:var(--green)">${active.length}</div><div class="stat-lbl">Clases Activas</div></div>
+      <div class="stat" style="--al:var(--yellow)"><div class="stat-val" style="color:var(--yellow)">${pending.length}</div><div class="stat-lbl">Pendientes</div></div>
+      <div class="stat" style="--al:var(--red)"><div class="stat-val" style="color:var(--red)">${cancelled.length}</div><div class="stat-lbl">Canceladas</div></div>
+      <div class="stat" style="--al:#2dd4bf"><div class="stat-val" style="color:#2dd4bf">${ALL_ROOMS.length}</div><div class="stat-lbl">Salones</div><div class="stat-sub">93 · Salitre · Rentar</div></div>
+      <div class="stat" style="--al:var(--accent2)"><div class="stat-val" style="color:var(--accent2)">${ALL_ROOMS.length-K.occ}</div><div class="stat-lbl">Salones Libres</div></div>
+    </div>
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon" style="background:#1e3a5f33">📊</div><div class="kpi-data"><div class="val" style="color:var(--accent)">${K.avg}</div><div class="lbl">Prom. Est./Clase</div><div class="sub">${K.ts} est. ÷ ${K.cnt} clases</div></div></div>
+      <div class="kpi"><div class="kpi-icon" style="background:#14532d33">⚡</div><div class="kpi-data"><div class="val" style="color:${utilColor(K.au)}">${K.au}%</div><div class="lbl">Utilización Docentes</div><div class="sub">Horas asig. vs máx.</div></div></div>
+      <div class="kpi"><div class="kpi-icon" style="background:#78350f33">🏫</div><div class="kpi-data"><div class="val" style="color:${utilColor(K.rp)}">${K.rp}%</div><div class="lbl">Uso Salones</div><div class="sub">${K.occ} de ${ALL_ROOMS.length} ocupados</div></div></div>
+      <div class="kpi"><div class="kpi-icon" style="background:#3b1f6033">📚</div><div class="kpi-data"><div class="val" style="color:${cfColor(K.cf)}">${K.cf}%</div><div class="lbl">ClassFill Prom.</div><div class="sub">Llenado capacidad</div></div></div>
+    </div>
+    <div class="two-col">
+      <div class="card"><div class="card-title"><div class="dot" style="background:var(--accent2)"></div>ClassFill por Clase</div>${cfBars||'<span style="color:var(--muted);font-size:12px">Sin clases activas</span>'}</div>
+      <div class="card"><div class="card-title"><div class="dot" style="background:var(--accent)"></div>Utilización por Tipo</div>${utilBars}</div>
+    </div>
+    ${urgent?`<div class="card"><div class="card-title"><div class="dot" style="background:var(--red)"></div>Cobertura Urgente</div>${urgent}</div>`:''}
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--accent2)"></div>Vista Rápida Horario</div><div id="mini-schedule"></div></div>`;
+  buildSchedule('mini-schedule',true);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TEACHERS PAGE — click row → detail panel
+// ══════════════════════════════════════════════════════════════════
+function renderTeachersPage(){
+  const f=STATE.teacherFilter.toLowerCase(),tf=STATE.teacherTypeFilter;
+  const filtered=STATE.teachers.filter(t=>(!f||t.id.toLowerCase().includes(f))&&(!tf||t.type===tf));
+  const rows=filtered.map(t=>{
+    const util=getUtil(t);const col=utilColor(util);const ok=t.assignedH>=t.minH;
+    const prefs=(t.prefs||[]).map(p=>`<span class="pref-tag">${p}</span>`).join('');
+    const types=(t.types||[]).map(tp=>`<span class="pref-tag" style="color:var(--accent)">${tp}</span>`).join('');
+    const cls=teacherClasses(t.id);
+    return `<tr style="cursor:pointer" onclick="showTeacherDetail('${t.id}')" title="Click para ver detalle">
+      <td><strong style="font-family:'DM Mono',monospace;color:var(--accent)">${t.id}</strong> <span style="font-size:9px;color:var(--muted)">▶ ver clases</span></td>
+      <td>${typeBadge(t.type)}</td>
+      <td><div style="display:flex;align-items:center;gap:6px"><span style="font-family:'DM Mono',monospace;font-weight:700;color:${col}">${t.assignedH}h</span><div class="hour-bar"><div class="hour-fill" style="width:${util}%;background:${col}"></div></div></div></td>
+      <td style="font-family:'DM Mono',monospace;color:var(--muted)">${t.minH}h / ${t.maxH}h</td>
+      <td><div style="display:flex;align-items:center;gap:6px">${ring(util,col,40)}<span style="font-size:11px;color:${col}">${util}%</span></div></td>
+      <td><div class="pref-tags">${prefs}</div></td>
+      <td><div class="pref-tags">${types}</div></td>
+      <td style="font-size:10px;color:var(--muted)">${t.note||'—'}</td>
+      <td><span style="font-size:11px;color:var(--muted)">${cls.length} clase${cls.length!==1?'s':''}</span><br>${ok?'<span class="badge green" style="margin-top:3px">✓ OK</span>':'<span class="badge red" style="margin-top:3px">⚠ Bajo mín.</span>'}</td>
+      <td onclick="event.stopPropagation()"><button class="btn btn-ghost btn-sm" style="color:var(--red)" onclick="removeTeacher('${t.id}')">✕</button></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('page-teachers').innerHTML=`
+    <div class="section-header">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Gestión de Docentes</div>
+      <button class="btn btn-primary" onclick="openModal('modal-add-teacher')">+ Nuevo Docente</button>
+    </div>
+    <div class="filters">
+      <input class="filter-input" type="text" placeholder="🔍 Buscar..." value="${STATE.teacherFilter}" oninput="STATE.teacherFilter=this.value;renderTeachersPage()" style="width:190px">
+      <select class="filter-input" onchange="STATE.teacherTypeFilter=this.value;renderTeachersPage()">
+        <option value="" ${!STATE.teacherTypeFilter?'selected':''}>Todos</option>
+        <option value="Senior" ${STATE.teacherTypeFilter==='Senior'?'selected':''}>Senior</option>
+        <option value="Coordinador" ${STATE.teacherTypeFilter==='Coordinador'?'selected':''}>Coordinador</option>
+        <option value="Full Time" ${STATE.teacherTypeFilter==='Full Time'?'selected':''}>Full Time</option>
+        <option value="Hourly Paid" ${STATE.teacherTypeFilter==='Hourly Paid'?'selected':''}>Hourly Paid</option>
+      </select>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">💡 Haz clic en cualquier docente para ver sus clases activas</div>
+    <div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>ID</th><th>Tipo</th><th>Horas Reales</th><th>Mín/Máx</th><th>% Util.</th><th>Preferencias</th><th>Tipos</th><th>Nota</th><th>Clases</th><th>Acción</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+}
+
+function showTeacherDetail(id){
+  const t=STATE.teachers.find(x=>x.id===id);if(!t)return;
+  const cls=teacherClasses(id);
+  const util=getUtil(t);const col=utilColor(util);
+  document.getElementById('td-title').textContent=`${t.id} — ${t.type}`;
+  document.getElementById('td-body').innerHTML=`
+    <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      ${ring(util,col,64)}
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Horas asignadas</div>
+        <div style="font-family:'DM Mono',monospace;font-size:24px;font-weight:800;color:${col}">${t.assignedH}h <span style="font-size:14px;color:var(--muted)">/ ${t.maxH}h máx</span></div>
+        <div style="font-size:12px;color:var(--muted);margin-top:3px">Mínimo requerido: ${t.minH}h · ${t.assignedH>=t.minH?'<span style="color:var(--green)">✓ Cumple</span>':'<span style="color:var(--red)">⚠ Bajo mínimo</span>'}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px">Preferencias</div>
+        <div class="pref-tags">${(t.prefs||[]).map(p=>`<span class="pref-tag">${p}</span>`).join('')}</div>
+        <div class="pref-tags" style="margin-top:4px">${(t.types||[]).map(tp=>`<span class="pref-tag" style="color:var(--accent)">${tp}</span>`).join('')}</div>
+        ${t.note?`<div style="font-size:10px;color:var(--muted);margin-top:4px">${t.note}</div>`:''}
+      </div>
+    </div>
+    <div style="font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Clases activas (${cls.length})</div>
+    ${cls.length===0?'<div style="color:var(--muted);font-size:12px">Sin clases activas asignadas</div>':
+    cls.map(c=>`<div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-weight:700;font-size:13px">${c.name}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${c.days} · ${c.time} · ${c.room?'<span style="color:#2dd4bf">'+c.room+'</span>':'sin salón'}</div>
+      </div>
+      <div style="text-align:right">
+        ${cfBar(c.students,c.maxStudents)}
+        <div style="font-size:10px;color:var(--muted);margin-top:3px">${c.students}/${c.maxStudents} estudiantes</div>
+      </div>
+    </div>`).join('')}`;
+  openModal('modal-teacher-detail');
+}
+
+function removeTeacher(id){
+  if(!confirm(`¿Remover ${id}?\nSus clases quedarán sin docente.`))return;
+  STATE.classes.forEach(c=>{if(c.teacher===id)c.teacher='';});
+  STATE.teachers=STATE.teachers.filter(t=>t.id!==id);
+  addAlert(`🗑 ${id} removido`,'warning','Sus clases quedaron sin docente.');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CLASSES PAGE
+// ══════════════════════════════════════════════════════════════════
+function renderClassesPage(){
+  const rows=STATE.classes.map(c=>{
+    const p=Math.round(c.students/c.maxStudents*100);
+    const tc=c.teacher
+      ?`<span style="font-family:'DM Mono',monospace;color:var(--accent)">${c.teacher}</span> <button class="btn btn-ghost btn-sm" onclick="openAssignModal('${c.id}')" title="Cambiar docente">✎</button>`
+      :`<button class="btn btn-primary btn-sm" onclick="openAssignModal('${c.id}')">✨ Asignar</button>`;
+    const roomCell=c.room?`<span class="badge teal">${c.room}</span><div style="font-size:9px;color:var(--muted)">${sedeName(c.room)}</div>`:`<span class="badge gray">Sin salón</span>`;
+    const toggleBtn=c.status==='active'
+      ?`<button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:var(--red)" onclick="toggleClassStatus('${c.id}')">⏸ Cancelar</button>`
+      :`<button class="btn btn-success btn-sm" onclick="toggleClassStatus('${c.id}')">▶ Activar</button>`;
+    return `<tr id="tr-c-${c.id}">
+      <td><strong>${c.name}</strong></td>
+      <td><span class="tag-type">${isKids(c.name)?'Niños':'Adultos'}</span></td>
+      <td>${c.days}</td>
+      <td><span style="font-family:'DM Mono',monospace">${c.time}</span></td>
+      <td>${roomCell}</td>
+      <td>${tc}</td>
+      <td style="font-size:10px;color:var(--muted)">${c.cover||'—'}</td>
+      <td style="font-size:10px;color:var(--muted)">${c.dm||'—'}</td>
+      <td><div class="edit-students">
+        <button onclick="changeStudents('${c.id}',-1)">−</button>
+        <span class="count" style="color:${cfColor(p)}">${c.students}</span>
+        <span style="color:var(--muted);font-size:10px">/${c.maxStudents}</span>
+        <button onclick="changeStudents('${c.id}',1)">+</button>
+      </div></td>
+      <td style="min-width:90px">${cfBar(c.students,c.maxStudents)}</td>
+      <td>${stBadge(c.status)}</td>
+      <td>${toggleBtn}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('page-classes').innerHTML=`
+    <div class="section-header">
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Gestión de Clases</div>
+      <button class="btn btn-primary" onclick="openNewClassModal()">+ Nueva Clase</button>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Clase</th><th>Tipo</th><th>Días</th><th>Horario</th><th>Salón</th><th>Docente</th><th>Cover</th><th>DM</th><th>Estudiantes</th><th>ClassFill</th><th>Estado</th><th>Acción</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+}
+
+function changeStudents(id,d){
+  const c=STATE.classes.find(x=>x.id===id);if(!c)return;
+  const nv=Math.max(0,Math.min(c.maxStudents,c.students+d));
+  if(nv===c.students)return;
+  c.students=nv;
+  renderAll();
+  const row=document.getElementById(`tr-c-${id}`);
+  if(row){row.classList.remove('flash');void row.offsetWidth;row.classList.add('flash');}
+}
+
+function toggleClassStatus(id){
+  const c=STATE.classes.find(x=>x.id===id);if(!c)return;
+  c.status=c.status==='active'?'cancelled':'active';
+  if(c.status==='cancelled'&&c.teacher) addAlert(`⚠️ ${c.name} cancelada — ${c.teacher} liberado`,'warning',`${c.days} ${c.time}`);
+  else if(c.status==='active') addAlert(`🟢 ${c.name} activada`,'new-course',`${c.days} ${c.time}`);
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// ROOMS PAGE + BROWSER MODAL
+// ══════════════════════════════════════════════════════════════════
+function renderRoomsPage(){
+  function grid(key,label){
+    return ROOMS_DATA[key].map(r=>{
+      const c=STATE.classes.find(x=>x.room===r&&x.status==='active');
+      return `<div class="room-card ${c?'occupied':'available'}" onclick="openRoomBrowser(null,null,null,'${key}')">
+        <div class="room-name">${r}</div><div class="room-sede">${label}</div>
+        <div style="margin-top:6px">${c?'<span class="badge red" style="font-size:9px">Ocupado</span>':'<span class="badge green" style="font-size:9px">Libre</span>'}</div>
+        <div class="room-class">${c?c.name.substring(0,16):''}</div>
+      </div>`;
+    }).join('');
+  }
+  const sedeData=[{k:'93',l:'Sede 93',col:'#2dd4bf'},{k:'sl',l:'Salitre',col:'var(--accent2)'},{k:'rt',l:'Rentar',col:'var(--orange)'}];
+  const useBars=sedeData.map(s=>{
+    const t=ROOMS_DATA[s.k].length,o=ROOMS_DATA[s.k].filter(r=>STATE.classes.find(c=>c.room===r&&c.status==='active')).length,p=Math.round(o/t*100);
+    return `<div style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span>${s.l}</span><span style="font-family:'DM Mono',monospace;color:${s.col}">${o}/${t} · ${p}%</span></div><div class="occ-bar"><div class="occ-fill" style="width:${p}%;background:${s.col}"></div></div></div>`;
+  }).join('');
+  document.getElementById('page-rooms').innerHTML=`
+    <div class="section-header"><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Gestión de Salones</div>
+    <button class="btn btn-primary" onclick="openRoomBrowser(null,null,null,'93')">📋 Ver disponibilidad por hora</button></div>
+    <div class="stats" style="grid-template-columns:repeat(3,1fr)">
+      <div class="stat" style="--al:#2dd4bf"><div class="stat-val" style="color:#2dd4bf">10</div><div class="stat-lbl">Sede 93</div><div class="stat-sub">S193–S1093</div></div>
+      <div class="stat" style="--al:var(--accent2)"><div class="stat-val" style="color:var(--accent2)">8</div><div class="stat-lbl">Salitre</div><div class="stat-sub">SL1–SL8</div></div>
+      <div class="stat" style="--al:var(--orange)"><div class="stat-val" style="color:var(--orange)">3</div><div class="stat-lbl">Rentar</div><div class="stat-sub">RT1–RT3</div></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px">💡 Haz clic en cualquier sede o salón para ver disponibilidad por hora</div>
+    <div class="three-col">
+      <div class="card"><div class="card-title"><div class="dot" style="background:#2dd4bf"></div>Sede 93 — <span style="color:var(--accent);cursor:pointer;font-size:11px" onclick="openRoomBrowser(null,null,null,'93')">ver horarios ↗</span></div><div class="room-grid">${grid('93','Sede 93')}</div></div>
+      <div class="card"><div class="card-title"><div class="dot" style="background:var(--accent2)"></div>Salitre — <span style="color:var(--accent);cursor:pointer;font-size:11px" onclick="openRoomBrowser(null,null,null,'sl')">ver horarios ↗</span></div><div class="room-grid">${grid('sl','Salitre')}</div></div>
+      <div class="card"><div class="card-title"><div class="dot" style="background:var(--orange)"></div>Rentar — <span style="color:var(--accent);cursor:pointer;font-size:11px" onclick="openRoomBrowser(null,null,null,'rt')">ver horarios ↗</span></div><div class="room-grid">${grid('rt','Rentar')}</div></div>
+    </div>
+    <div class="card"><div class="card-title"><div class="dot" style="background:var(--accent)"></div>Uso por Sede</div>${useBars}</div>`;
+}
+
+// Room browser modal: shows hour x room grid for a sede
+let rbTargetSelect=null, rbTargetDays=null, rbTargetTime=null;
+function openRoomBrowser(selectId,days,time,initialSede='93'){
+  rbTargetSelect=selectId; rbTargetDays=days; rbTargetTime=time;
+  // Build sede buttons
+  const sedes=[{k:'93',l:'Sede 93'},{k:'sl',l:'Salitre'},{k:'rt',l:'Rentar'}];
+  document.getElementById('rb-sede-btns').innerHTML=sedes.map(s=>
+    `<button class="sede-btn ${s.k===initialSede?'active':''}" onclick="switchRoomBrowserSede('${s.k}',this)">${s.l}</button>`
+  ).join('');
+  renderRoomBrowserGrid(initialSede);
+  openModal('modal-room-browser');
+}
+function switchRoomBrowserSede(key,btn){
+  document.querySelectorAll('.sede-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderRoomBrowserGrid(key);
+}
+function renderRoomBrowserGrid(key){
+  const rooms=ROOMS_DATA[key];
+  const cols=rooms.length;
+  // Build grid: rows = hours, cols = rooms
+  let html=`<div class="room-hour-grid" style="grid-template-columns:70px repeat(${cols},1fr)">`;
+  // Header row
+  html+=`<div class="rh-head">Hora</div>`;
+  rooms.forEach(r=>html+=`<div class="rh-head">${r}</div>`);
+  // Hours
+  ALL_HOURS.forEach(h=>{
+    html+=`<div class="rh-time">${h}</div>`;
+    rooms.forEach(r=>{
+      // Find class using this room at this hour
+      const busy=STATE.classes.find(c=>c.room===r&&c.status==='active'&&c.time===h);
+      // Highlight if matches target
+      const isTarget=rbTargetTime&&rbTargetTime===h;
+      if(busy){
+        html+=`<div class="rh-cell busy" title="${busy.name} · ${busy.days}">${busy.name.substring(0,8)}</div>`;
+      } else {
+        const highlight=isTarget?'border:2px solid var(--accent);font-weight:700;':'';
+        html+=`<div class="rh-cell free" style="${highlight}" onclick="selectRoomFromBrowser('${r}')" title="Disponible — click para seleccionar">${isTarget?'⭐ Sel.':'Libre'}</div>`;
+      }
+    });
+  });
+  html+='</div>';
+  document.getElementById('rb-grid-wrap').innerHTML=html;
+}
+function selectRoomFromBrowser(room){
+  if(rbTargetSelect){
+    const sel=document.getElementById(rbTargetSelect);
+    if(sel){sel.value=room;checkRoomConflict();}
+  }
+  closeModal('modal-room-browser');
+  addAlert(`✅ Salón ${room} seleccionado`,'info','Verifica que no haya conflicto con el horario elegido.');
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CONFLICT CHECKS
+// ══════════════════════════════════════════════════════════════════
+function getEditingClassId(){return document.getElementById('nc-edit-id').value||'';}
+
+function checkRoomConflict(){
+  const room=document.getElementById('nc-room').value;
+  const days=document.getElementById('nc-days').value;
+  const time=document.getElementById('nc-time').value;
+  const ignoreId=getEditingClassId();
+  const box=document.getElementById('class-conflict-box');
+  if(room&&roomHasConflict(room,days,time,ignoreId)){
+    const conflict=STATE.classes.find(c=>c.room===room&&c.status==='active'&&c.id!==ignoreId&&daysOverlap(c.days,days)&&timesOverlap(c.time,time));
+    box.textContent=`🚫 CONFLICTO DE SALÓN: ${room} ya está asignado a "${conflict?.name}" (${conflict?.days} ${conflict?.time}). Selecciona otro salón.`;
+    box.classList.add('show');
+    return true;
+  }
+  // Check currently selected teacher too
+  const tid=document.getElementById('nc-teacher-selected').value;
+  if(tid&&teacherHasConflict(tid,days,time,ignoreId)){
+    const conflict=STATE.classes.find(c=>c.teacher===tid&&c.status==='active'&&c.id!==ignoreId&&daysOverlap(c.days,days)&&timesOverlap(c.time,time));
+    box.textContent=`🚫 CONFLICTO DE DOCENTE: ${tid} ya tiene clase "${conflict?.name}" en ${conflict?.days} ${conflict?.time}. Elige otro docente.`;
+    box.classList.add('show');
+    return true;
+  }
+  box.classList.remove('show');
+  return false;
+}
+
+function refreshConflicts(){
+  checkRoomConflict();
+  // Re-render recommendations if already open
+  const recs=document.getElementById('smart-recommendations');
+  if(recs&&recs.innerHTML) smartRecommend('smart-recommendations','selectNewClassTeacher');
+  populateRoomSelect();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TEACHER DROPDOWN (manual search with utilization %)
+// ══════════════════════════════════════════════════════════════════
+function buildTeacherOptions(inputId,dropdownId,days,time,ignoreClassId,onSelectFn){
+  const input=document.getElementById(inputId);
+  const dd=document.getElementById(dropdownId);
+  const q=(input?.value||'').toLowerCase();
+  const candidates=STATE.teachers.filter(t=>t.type!=='Coordinador');
+  const filtered=q?candidates.filter(t=>t.id.toLowerCase().includes(q)||t.type.toLowerCase().includes(q)):candidates;
+  dd.innerHTML=filtered.slice(0,20).map(t=>{
+    const util=getUtil(t);const col=utilColor(util);
+    const conflict=teacherHasConflict(t.id,days||'',time||'',ignoreClassId||'');
+    const colClass=conflict?'conflict-opt':'';
+    const conflictInfo=conflict?`<span style="color:var(--red);font-size:10px"> 🚫 conflicto ${days} ${time}</span>`:'';
+    return `<div class="teacher-opt ${colClass}" onclick="${conflict?'showTeacherConflictError(\''+t.id+'\',\''+days+'\',\''+time+'\')':onSelectFn+'(\''+t.id+'\')'}" title="${t.note||t.type}">
+      <div>
+        <span style="font-family:'DM Mono',monospace;font-weight:700;color:var(--accent)">${t.id}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:6px">${t.type}</span>
+        ${conflictInfo}
+      </div>
+      <span class="t-util" style="background:${col}22;color:${col};border:1px solid ${col}44">${util}%</span>
+    </div>`;
+  }).join('');
+  dd.classList.add('open');
+}
+
+function showTeacherConflictError(tid,days,time){
+  const conflict=STATE.classes.find(c=>c.teacher===tid&&c.status==='active'&&daysOverlap(c.days,days)&&timesOverlap(c.time,time));
+  addAlert(`🚫 Conflicto horario — ${tid}`,'error',`Ya tiene clase "${conflict?.name}" el ${conflict?.days} ${conflict?.time}. No se puede asignar.`);
+}
+
+// For new class modal
+function filterTeacherDropdown(){
+  const days=document.getElementById('nc-days').value;
+  const time=document.getElementById('nc-time').value;
+  buildTeacherOptions('teacher-manual-search','teacher-dropdown',days,time,getEditingClassId(),'selectNewClassTeacher');
+}
+function openTeacherDropdown(){filterTeacherDropdown();}
+function closeTeacherDropdown(){document.getElementById('teacher-dropdown').classList.remove('open');}
+
+// For assign modal
+function filterAssignDropdown(){
+  const cid=document.getElementById('assign-class-id').value;
+  const c=STATE.classes.find(x=>x.id===cid);
+  buildTeacherOptions('assign-manual-search','assign-dropdown',c?.days,c?.time,cid,'confirmAssign');
+}
+function openAssignDropdown(){filterAssignDropdown();}
+function closeAssignDropdown(){document.getElementById('assign-dropdown').classList.remove('open');}
+
+// ══════════════════════════════════════════════════════════════════
+// SMART RECOMMEND
+// ══════════════════════════════════════════════════════════════════
+function scoreTeacher(t,courseName,days,time,ignoreId){
+  let s=0;const reasons=[];
+  const conflict=teacherHasConflict(t.id,days,time,ignoreId);
+  if(conflict){return{score:-1,reasons:['🚫 Conflicto de horario'],conflict:true};}
+  const rem=t.maxH-t.assignedH;
+  if(rem>=4){s+=30;reasons.push(`${rem}h disponibles`);}
+  else if(rem>=1){s+=10;reasons.push('Pocas horas lib.');}
+  else{s-=20;reasons.push('⚠ Al límite');}
+  if(isKids(courseName)&&t.types.some(tp=>tp.includes('Niños'))){s+=40;reasons.push('✓ Esp. niños');}
+  else if(isKids(courseName)){s-=30;reasons.push('✗ No enseña niños');}
+  if(isCorp(courseName)&&t.types.some(tp=>tp.includes('Corp'))){s+=30;reasons.push('✓ Corporativo');}
+  if(t.type==='Full Time'){s+=15;reasons.push('FT prioritario');}
+  if(t.type==='Senior'){s+=20;reasons.push('Senior = calidad');}
+  if(t.assignedH<t.minH){s+=25;reasons.push('⚡ Necesita horas');}
+  return{score:Math.max(0,Math.min(100,s)),reasons,conflict:false};
+}
+
+function smartRecommend(containerId,cbName){
+  const course=document.getElementById('nc-course').value;
+  const days=document.getElementById('nc-days').value;
+  const time=document.getElementById('nc-time').value;
+  const ignoreId=getEditingClassId();
+  buildRecCards(containerId,course,days,time,ignoreId,cbName);
+}
+
+function buildRecCards(containerId,courseName,days,time,ignoreId,cbName){
+  const el=document.getElementById(containerId);if(!el)return;
+  const scored=STATE.teachers
+    .filter(t=>t.type!=='Coordinador')
+    .map(t=>({...t,...scoreTeacher(t,courseName,days,time,ignoreId)}))
+    .sort((a,b)=>{if(a.conflict&&!b.conflict)return 1;if(!a.conflict&&b.conflict)return -1;return b.score-a.score;})
+    .slice(0,6);
+  el.innerHTML=scored.map((t,i)=>{
+    if(t.conflict){
+      return `<div class="rec-card conflict">
+        <div style="font-size:16px">🚫</div>
+        <div style="flex:1"><div class="rec-id">${t.id} <span style="font-size:10px;color:var(--muted)">${t.type}</span></div>
+          <div class="rec-reason" style="color:var(--red)">Conflicto: ya tiene clase en ${days} ${time}</div></div>
+        <div style="color:var(--red);font-size:12px">No disponible</div>
+      </div>`;
+    }
+    const cls=i===0?'best':t.score>=40?'good':'low';
+    const star=i===0?'⭐':i===1?'✓':'○';
+    const col=i===0?'var(--green)':t.score>=40?'var(--accent)':'var(--muted)';
+    const util=getUtil(t);
+    return `<div class="rec-card ${cls}" onclick="${cbName}('${t.id}','${days}','${time}','${ignoreId}')">
+      <div style="font-size:16px">${star}</div>
+      <div style="flex:1">
+        <div class="rec-id">${t.id} <span style="font-size:10px;color:var(--muted)">${t.type}</span></div>
+        <div class="rec-reason">${t.reasons.slice(0,2).join(' · ')}</div>
+        <div class="pref-tags" style="margin-top:4px">${t.types.map(tp=>`<span class="pref-tag">${tp}</span>`).join('')}</div>
+      </div>
+      <div style="text-align:center">${ring(util,col,42)}<div style="font-size:9px;color:var(--muted);margin-top:2px">${t.assignedH}h/${t.maxH}h</div></div>
+    </div>`;
+  }).join('');
+}
+
+function selectNewClassTeacher(id,days,time,ignoreId){
+  const d=days||document.getElementById('nc-days').value;
+  const ti=time||document.getElementById('nc-time').value;
+  const ig=ignoreId||getEditingClassId();
+  if(teacherHasConflict(id,d,ti,ig)){
+    showTeacherConflictError(id,d,ti);return;
+  }
+  document.getElementById('nc-teacher-selected').value=id;
+  document.getElementById('nc-teacher-name').textContent=id+` (${getUtil(STATE.teachers.find(t=>t.id===id))}% util.)`;
+  document.getElementById('nc-teacher-display').style.display='block';
+  document.getElementById('smart-recommendations').innerHTML='';
+  document.getElementById('teacher-manual-search').value='';
+  checkRoomConflict();
+}
+function clearTeacher(){
+  document.getElementById('nc-teacher-selected').value='';
+  document.getElementById('nc-teacher-display').style.display='none';
+  document.getElementById('class-conflict-box').classList.remove('show');
+}
+
+// Assign from table
+function openAssignModal(classId){
+  const c=STATE.classes.find(x=>x.id===classId);if(!c)return;
+  document.getElementById('assign-class-id').value=classId;
+  document.getElementById('assign-modal-title').textContent=`Asignar Docente — ${c.name}`;
+  document.getElementById('assign-class-info').innerHTML=
+    `<strong>${c.name}</strong> · ${c.days} · ${c.time}${c.room?' · '+c.room:''} · ${c.students} est.${c.teacher?` · Actual: <strong style="color:var(--accent)">${c.teacher}</strong>`:''}`;
+  document.getElementById('assign-conflict-box').classList.remove('show');
+  document.getElementById('assign-manual-search').value='';
+  buildRecCards('assign-recommendations',c.name,c.days,c.time,classId,'confirmAssign');
+  openModal('modal-assign-teacher');
+}
+
+function confirmAssign(tid,days,time,ignoreId){
+  const cid=ignoreId||document.getElementById('assign-class-id').value;
+  const c=STATE.classes.find(x=>x.id===cid);if(!c)return;
+  const d=days||c.days,ti=time||c.time;
+  if(teacherHasConflict(tid,d,ti,cid)){
+    const box=document.getElementById('assign-conflict-box');
+    const conflict=STATE.classes.find(x=>x.teacher===tid&&x.status==='active'&&x.id!==cid&&daysOverlap(x.days,d)&&timesOverlap(x.time,ti));
+    box.textContent=`🚫 ${tid} ya tiene clase "${conflict?.name}" en ${conflict?.days} ${conflict?.time}. No se puede asignar.`;
+    box.classList.add('show');
+    return;
+  }
+  const prev=c.teacher;c.teacher=tid;
+  if(c.status==='cancelled'||c.status==='open')c.status='active';
+  addAlert(`✅ ${tid} → ${c.name}`,'new-course',`${c.days} ${c.time}${prev?' · Reemplaza '+prev:''}`);
+  closeModal('modal-assign-teacher');
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SAVE NEW CLASS — with full conflict validation
+// ══════════════════════════════════════════════════════════════════
+function openNewClassModal(){
+  document.getElementById('nc-edit-id').value='';
+  document.getElementById('modal-class-title').textContent='📚 Nueva Clase';
+  clearTeacher();
+  document.getElementById('smart-recommendations').innerHTML='';
+  document.getElementById('class-conflict-box').classList.remove('show');
+  document.getElementById('teacher-manual-search').value='';
+  populateSelects();
+  openModal('modal-add-class');
+}
+
+function saveNewClass(){
+  const course=document.getElementById('nc-course').value;
+  const days=document.getElementById('nc-days').value;
+  const time=document.getElementById('nc-time').value;
+  const room=document.getElementById('nc-room').value;
+  const students=Math.max(0,parseInt(document.getElementById('nc-students').value)||0);
+  const teacher=document.getElementById('nc-teacher-selected').value;
+  const cover=document.getElementById('nc-cover').value;
+  const dm=document.getElementById('nc-dm').value;
+  const editId=document.getElementById('nc-edit-id').value;
+  const box=document.getElementById('class-conflict-box');
+
+  // Validate room conflict
+  if(room&&roomHasConflict(room,days,time,editId)){
+    const conflict=STATE.classes.find(c=>c.room===room&&c.status==='active'&&c.id!==editId&&daysOverlap(c.days,days)&&timesOverlap(c.time,time));
+    box.textContent=`🚫 SALÓN OCUPADO: ${room} tiene "${conflict?.name}" en ${days} ${time}. Elige otro salón.`;
+    box.classList.add('show');return;
+  }
+  // Validate teacher conflict
+  if(teacher&&teacherHasConflict(teacher,days,time,editId)){
+    const conflict=STATE.classes.find(c=>c.teacher===teacher&&c.status==='active'&&c.id!==editId&&daysOverlap(c.days,days)&&timesOverlap(c.time,time));
+    box.textContent=`🚫 DOCENTE OCUPADO: ${teacher} tiene "${conflict?.name}" en ${days} ${time}. Elige otro docente.`;
+    box.classList.add('show');return;
+  }
+  box.classList.remove('show');
+
+  if(editId){
+    const c=STATE.classes.find(x=>x.id===editId);
+    if(c){Object.assign(c,{name:course,days,time,room,teacher,cover,dm,students:Math.min(students,c.maxStudents),status:teacher?'active':c.status});}
+    addAlert(`✏️ ${course} actualizada`,'info',`${days} ${time}${room?' · '+room:''}`);
+  } else {
+    STATE.classes.push({id:'c'+Date.now(),name:course,days,time,room,teacher,cover,dm,status:teacher?'active':'open',students,maxStudents:10});
+    addAlert(`📚 ${course} creada`,'new-course',`${days} ${time}${room?' · '+room:''}${teacher?' · '+teacher:' · sin docente'}`);
+  }
+  closeModal('modal-add-class');
+  clearTeacher();
+  document.getElementById('smart-recommendations').innerHTML='';
+  renderAll();
+  setTimeout(()=>showPage('classes'),150);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COMMERCIAL
+// ══════════════════════════════════════════════════════════════════
+function renderCommercialPage(){
+  const rows=STATE.commercial.map((c,idx)=>{
+    const st=c.total===0?'red':c.paid>=5?'green':'yellow';
+    const sb={red:'<span class="badge red">Sin inscritos</span>',yellow:'<span class="badge yellow">Pago pendiente</span>',green:'<span class="badge green">🟢 Lista para abrir</span>'}[st];
+    const ob=st==='green'?`<button class="btn btn-success btn-sm" onclick="openCourseFromCommercial(${idx})">🚀 Abrir</button>`:`<button class="btn btn-ghost btn-sm" style="opacity:.4" disabled>Abrir</button>`;
+    return `<tr><td><strong>${c.course}</strong></td><td>${c.days} · <span style="font-family:'DM Mono',monospace">${c.time}</span></td><td>${c.total}</td><td style="color:var(--green)">${c.paid}</td><td style="color:var(--yellow)">${c.pending}</td><td>${semaforo(c.total,c.paid)}</td><td>${sb}</td><td style="display:flex;gap:6px">${ob} <button class="btn btn-ghost btn-sm" onclick="editCommercial(${idx})">✎</button></td></tr>`;
+  }).join('');
+  document.getElementById('page-commercial').innerHTML=`
+    <div class="section-header"><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Área Comercial</div><button class="btn btn-primary" onclick="openModal('modal-new-course')">+ Nueva Solicitud</button></div>
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:12px;margin-bottom:16px;display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;"><div class="luz on-red"></div><strong>Rojo</strong> — Sin inscritos</div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;"><div class="luz on-yellow"></div><strong>Amarillo</strong> — Pago pendiente</div>
+      <div style="display:flex;align-items:center;gap:7px;font-size:12px;"><div class="luz on-green"></div><strong>Verde</strong> — ≥5 pagados · Abrir</div>
+    </div>
+    <div class="card"><div class="tbl-wrap"><table>
+      <thead><tr><th>Curso</th><th>Días / Hora</th><th>Inscritos</th><th>Pagados</th><th>Pend.</th><th>Semáforo</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div></div>`;
+}
+
+function openCourseFromCommercial(idx){
+  const com=STATE.commercial[idx];
+  const exists=STATE.classes.find(c=>c.name===com.course&&c.status==='active');
+  if(exists){addAlert(`ℹ️ ${com.course} ya activa`,'info','Ver en Gestión de Clases.');return;}
+  const pending=STATE.classes.find(c=>c.name===com.course&&c.status==='pending');
+  if(pending){pending.status='active';pending.students=com.paid;}
+  else STATE.classes.push({id:'c'+Date.now(),name:com.course,days:com.days,time:com.time,room:'',teacher:'',cover:'',dm:'',status:'open',students:com.paid,maxStudents:10});
+  addAlert(`🟢 ${com.course} aperturada`,'new-course',`${com.days} · ${com.time} · ${com.paid} est. Asignar docente y salón.`);
+  renderAll();setTimeout(()=>showPage('classes'),400);
+}
+
+function editCommercial(idx){
+  const c=STATE.commercial[idx];
+  document.getElementById('edit-com-title').textContent=`Editar — ${c.course}`;
+  document.getElementById('edit-com-total').value=c.total;
+  document.getElementById('edit-com-paid').value=c.paid;
+  document.getElementById('edit-com-idx').value=idx;
+  openModal('modal-edit-commercial');
+}
+function saveEditCommercial(){
+  const idx=parseInt(document.getElementById('edit-com-idx').value);
+  const t=parseInt(document.getElementById('edit-com-total').value)||0;
+  const p=parseInt(document.getElementById('edit-com-paid').value)||0;
+  STATE.commercial[idx].total=t;STATE.commercial[idx].paid=p;STATE.commercial[idx].pending=Math.max(0,t-p);
+  addAlert(`📊 ${STATE.commercial[idx].course} actualizado`,'info',`${t} inscritos · ${p} pagados`);
+  closeModal('modal-edit-commercial');renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COVERAGE
+// ══════════════════════════════════════════════════════════════════
+function renderCoveragePage(){
+  document.getElementById('page-coverage').innerHTML=`
+    <div class="section-header"><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Motor de Cobertura</div></div>
+    <div class="two-col">
+      <div class="card"><div class="card-title"><div class="dot" style="background:var(--red)"></div>Clase a Cubrir</div>
+        <div class="form-row"><label>Clase</label><select class="filter-input" style="width:100%" id="cov-class" onchange="runCoverage()">
+          <option value="">Seleccionar...</option>
+          ${STATE.classes.map(c=>`<option value="${c.id}">${c.name} · ${c.days} ${c.time}${c.room?' · '+c.room:''}</option>`).join('')}
+        </select></div>
+        <div class="form-row"><label>Razón</label><select class="filter-input" style="width:100%">
+          <option>Clase cancelada</option><option>Docente ausente</option><option>Apertura nuevo grupo</option><option>Ampliar grupo</option>
+        </select></div>
+        <button class="btn btn-primary" onclick="runCoverage()" style="width:100%">🔍 Buscar</button>
+      </div>
+      <div class="card" id="coverage-results"><div class="card-title"><div class="dot" style="background:var(--green)"></div>Docentes Disponibles</div><div style="color:var(--muted);font-size:12px">← Selecciona una clase</div></div>
+    </div>`;
+}
+
+function runCoverage(){
+  const cid=document.getElementById('cov-class').value;
+  const el=document.getElementById('coverage-results');
+  if(!cid){el.innerHTML='<div class="card-title"><div class="dot" style="background:var(--green)"></div>Docentes Disponibles</div><div style="color:var(--muted);font-size:12px">← Selecciona una clase</div>';return;}
+  const cls=STATE.classes.find(c=>c.id===cid);
+  const scored=STATE.teachers.filter(t=>t.type!=='Coordinador'&&t.id!==cls.teacher)
+    .map(t=>({...t,...scoreTeacher(t,cls.name,cls.days,cls.time,cid)}))
+    .sort((a,b)=>{if(a.conflict&&!b.conflict)return 1;if(!a.conflict&&b.conflict)return -1;return b.score-a.score;}).slice(0,5);
+  el.innerHTML=`<div class="card-title"><div class="dot" style="background:var(--green)"></div>Disponibles — ${cls.name}</div>`+
+  scored.map((t,i)=>{
+    if(t.conflict)return `<div style="background:#1a0a0a;border:1px solid var(--red);border-radius:9px;padding:10px;margin-bottom:8px;opacity:.6;font-size:12px">🚫 <strong style="font-family:'DM Mono',monospace">${t.id}</strong> — conflicto en ${cls.days} ${cls.time}</div>`;
+    const util=getUtil(t);const col=i===0?'var(--green)':'var(--accent)';
+    return `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:11px;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div><div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);font-weight:700">${i===0?'⭐':i===1?'✓':'○'} ${t.id}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${t.reasons.slice(0,2).join(' · ')}</div></div>
+      <div style="text-align:center">${ring(util,col,40)}<div style="font-size:10px;color:var(--muted)">${t.assignedH}h/${t.maxH}h</div>
+        <button class="btn btn-success btn-sm" style="margin-top:5px" onclick="applyCoverage('${cid}','${t.id}')">Asignar</button></div>
+    </div>`;
+  }).join('');
+}
+
+function applyCoverage(cid,tid){
+  const c=STATE.classes.find(x=>x.id===cid);if(!c)return;
+  if(teacherHasConflict(tid,c.days,c.time,cid)){addAlert(`🚫 Conflicto — ${tid}`,'error',`Ya tiene clase en ${c.days} ${c.time}`);return;}
+  c.teacher=tid;if(c.status==='cancelled')c.status='active';
+  addAlert(`✅ ${tid} → ${c.name}`,'new-course',`${c.days} ${c.time}`);
+  renderAll();if(STATE.currentPage==='coverage')renderCoveragePage();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCHEDULE
+// ══════════════════════════════════════════════════════════════════
+function renderSchedulePage(){
+  document.getElementById('page-schedule').innerHTML=`
+    <div class="section-header"><div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">Horario Semanal</div>
+    <div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm">◀ Anterior</button><button class="btn btn-ghost btn-sm">Siguiente ▶</button></div></div>
+    <div class="card"><div id="full-schedule"></div></div>`;
+  buildSchedule('full-schedule',false);
+}
+
+function buildSchedule(cid,mini=false){
+  const DAYS=['Mar','Mié','Jue','Vie','Sáb'];
+  const HOURS=mini?ALL_HOURS.filter((_,i)=>i%2===0):ALL_HOURS;
+  function classInSlot(day,hour){
+    return STATE.classes.filter(c=>{
+      if(c.time!==hour)return false;
+      const dm={Mar:'Mar',Mié:'Mié',Jue:'Jue',Vie:'Vie',Sáb:'Sáb'};
+      return daysOverlap(c.days,dm[day]||day);
+    });
+  }
+  const el=document.getElementById(cid);if(!el)return;
+  let html=`<div class="schedule-grid"><div class="sg-header"></div>${DAYS.map(d=>`<div class="sg-header">${d}</div>`).join('')}`;
+  HOURS.forEach(h=>{
+    html+=`<div class="sg-time">${h}</div>`;
+    DAYS.forEach(d=>{
+      const cls=classInSlot(d,h);
+      html+=`<div class="sg-slot">${cls.map(c=>`<div class="sg-class ${c.status==='cancelled'?'cancelled':c.status==='pending'?'pending':''}">${c.name.substring(0,12)}${c.teacher?' · '+c.teacher:''}${c.room?' · '+c.room:''}</div>`).join('')}</div>`;
+    });
+  });
+  html+='</div>';el.innerHTML=html;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SAVE NEW TEACHER / COMMERCIAL
+// ══════════════════════════════════════════════════════════════════
+function updateNewCode(){
+  const type=document.getElementById('new-type').value;
+  const prefix={Senior:'SR',Coordinador:'COO','Full Time':'FT','Hourly Paid':'HPT'}[type];
+  const count=STATE.teachers.filter(t=>t.type===type).length+1;
+  document.getElementById('new-code').value=prefix+count;
+}
+function saveNewTeacher(){
+  const type=document.getElementById('new-type').value;
+  const code=document.getElementById('new-code').value;
+  const pref=document.getElementById('new-pref').value;
+  const types=Array.from(document.getElementById('new-types').selectedOptions).map(o=>o.value);
+  const mins={Senior:5,Coordinador:15,'Full Time':25,'Hourly Paid':12};
+  const maxs={Senior:10,Coordinador:25,'Full Time':35,'Hourly Paid':20};
+  STATE.teachers.push({id:code,type,minH:mins[type],maxH:maxs[type],assignedH:0,prefs:pref?[pref]:[],types:types.length?types:['Adultos'],note:''});
+  addAlert(`👤 ${code} registrado`,'info',`${type}`);
+  closeModal('modal-add-teacher');populateSelects();renderAll();
+}
+function saveNewCourse(){
+  const course=document.getElementById('com-course').value;
+  const days=document.getElementById('com-days').value;
+  const time=document.getElementById('com-time').value;
+  const total=parseInt(document.getElementById('com-total').value)||0;
+  const paid=parseInt(document.getElementById('com-paid').value)||0;
+  STATE.commercial.push({course,days,time,total,paid,pending:Math.max(0,total-paid)});
+  addAlert(`📊 ${course} registrado`,'info',`${days} · ${time}`);
+  closeModal('modal-new-course');renderAll();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// POPULATE SELECTS
+// ══════════════════════════════════════════════════════════════════
+function populateSelects(){
+  const roomOpts=['<option value="">— Sin asignar —</option>',
+    '<optgroup label="Sede 93">',
+    ...ROOMS_DATA['93'].map(r=>`<option>${r}</option>`),
+    '</optgroup><optgroup label="Salitre">',
+    ...ROOMS_DATA['sl'].map(r=>`<option>${r}</option>`),
+    '</optgroup><optgroup label="Rentar">',
+    ...ROOMS_DATA['rt'].map(r=>`<option>${r}</option>`),
+    '</optgroup>'].join('');
+  const tOpts='<option value="">— Sin asignar —</option>'+STATE.teachers.map(t=>`<option value="${t.id}">${t.id} (${t.type.substring(0,2)})</option>`).join('');
+  const r=document.getElementById('nc-room');if(r)r.innerHTML=roomOpts;
+  const cv=document.getElementById('nc-cover');if(cv)cv.innerHTML=tOpts;
+  const dm=document.getElementById('nc-dm');if(dm)dm.innerHTML=tOpts;
+}
+
+function populateRoomSelect(){
+  // Re-populate but keep current value
+  const sel=document.getElementById('nc-room');if(!sel)return;
+  const cur=sel.value;
+  populateSelects();
+  if(cur)sel.value=cur;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// NAV & UTILS
+// ══════════════════════════════════════════════════════════════════
+const PAGE_MAP={dashboard:0,teachers:1,schedule:2,classes:3,rooms:4,commercial:5,coverage:6};
+function showPage(id){
+  STATE.currentPage=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.tab')[PAGE_MAP[id]||0]?.classList.add('active');
+  if(id==='dashboard') renderDashboard();
+  else if(id==='teachers') renderTeachersPage();
+  else if(id==='schedule') renderSchedulePage();
+  else if(id==='classes') renderClassesPage();
+  else if(id==='rooms') renderRoomsPage();
+  else if(id==='commercial') renderCommercialPage();
+  else if(id==='coverage') renderCoveragePage();
+}
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+let alertsVisible=true;
+function toggleAlerts(){alertsVisible=!alertsVisible;document.getElementById('alert-panel').style.display=alertsVisible?'flex':'none';}
+function closeAlert(id){const el=document.getElementById(id);if(el){el.style.opacity='0';el.style.transform='translateX(20px)';setTimeout(()=>{el.remove();updateNotifCount();},250);}}
+function updateNotifCount(){const n=document.querySelectorAll('.alert-item').length;document.getElementById('notif-btn').textContent=`🔔 ${n}`;}
+function addAlert(title,type,body){
+  const panel=document.getElementById('alert-panel');const id='al'+Date.now();
+  const div=document.createElement('div');div.className=`alert-item ${type}`;div.id=id;
+  div.innerHTML=`<span class="alert-close" onclick="closeAlert('${id}')">✕</span><div class="alert-title">${title}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${body}</div>`;
+  panel.prepend(div);updateNotifCount();
+  if(type!=='error') setTimeout(()=>closeAlert(id),10000);
+}
+function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+setInterval(tick,1000);tick();
+
+// ══════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════
+recalcHours();
+populateSelects();
+updateNewCode();
+showPage('dashboard');
+addAlert('⚠️ ADVANCED cancelada — FT11 liberado','warning','L/M 5–6pm · Horas actualizadas.');
+addAlert('🟢 BEGINNER A lista para apertura','new-course','Sáb 9–10am · 6 pagados.');
+</script>
+</body>
+</html>
